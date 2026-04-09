@@ -1,0 +1,43 @@
+name: Deskimon Voice Assistant
+version: "0.1.0"
+slug: deskimon-voice
+description: >-
+  Voice assistant relay for Deskimon devices. Bridges your Deskimon to
+  Home Assistant voice pipelines using the Linux Voice Assistant (LVA).
+url: https://github.com/Deskimons/ha-addons
+arch:
+  - amd64
+  - aarch64
+stage: experimental
+startup: application
+boot: auto
+init: false
+
+host_network: true
+ports:
+  "6053/tcp": 6053
+  "9522/tcp": 9522
+ports_description:
+  "6053/tcp": "ESPHome native API"
+  "9522/tcp": "Deskimon ESP32 relay"
+
+hassio_api: true
+homeassistant_api: true
+auth_api: true
+
+audio: true
+
+map:
+  - type: data
+
+options:
+  device_name: "deskimon"
+  relay_port: 9522
+  esphome_port: 6053
+  debug: false
+
+schema:
+  device_name: str
+  relay_port: port
+  esphome_port: port
+  debug: bool

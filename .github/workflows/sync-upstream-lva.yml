@@ -1,0 +1,52 @@
+name: Sync Upstream LVA
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  check-upstream:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get latest upstream release tag
+        id: upstream
+        run: |
+          LATEST=$(curl -s https://api.github.com/repos/OHF-Voice/linux-voice-assistant/releases/latest | jq -r .tag_name)
+          echo "tag=${LATEST}" >> "$GITHUB_OUTPUT"
+          echo "Latest upstream: ${LATEST}"
+
+      - name: Get current pinned version
+        id: current
+        run: |
+          CURRENT=$(grep -oP 'LVA_VERSION=\K[^\s]+' HomeAssistant/deskimon-voice/Dockerfile)
+          echo "tag=${CURRENT}" >> "$GITHUB_OUTPUT"
+          echo "Current pinned: ${CURRENT}"
+
+      - name: Update Dockerfile if newer
+        if: steps.upstream.outputs.tag != steps.current.outputs.tag
+        run: |
+          sed -i "s/LVA_VERSION=.*/LVA_VERSION=${{ steps.upstream.outputs.tag }}/" \
+            HomeAssistant/deskimon-voice/Dockerfile
+          echo "Updated LVA_VERSION to ${{ steps.upstream.outputs.tag }}"
+
+      - name: Create Pull Request
+        if: steps.upstream.outputs.tag != steps.current.outputs.tag
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: bump LVA to ${{ steps.upstream.outputs.tag }}"
+          title: "Update Linux Voice Assistant to ${{ steps.upstream.outputs.tag }}"
+          body: |
+            Upstream [linux-voice-assistant](https://github.com/OHF-Voice/linux-voice-assistant) released `${{ steps.upstream.outputs.tag }}`.
+
+            Current pinned version: `${{ steps.current.outputs.tag }}`
+
+            This PR updates the Dockerfile to use the latest release. Please test before merging.
+          branch: "chore/lva-${{ steps.upstream.outputs.tag }}"
+          labels: dependencies

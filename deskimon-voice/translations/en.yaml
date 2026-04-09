@@ -1,0 +1,21 @@
+configuration:
+  device_name:
+    name: Device Name
+    description: >-
+      Name for this voice assistant as it appears in Home Assistant.
+  relay_port:
+    name: Relay Port
+    description: >-
+      TCP port the Deskimon ESP32 connects to for audio streaming.
+  esphome_port:
+    name: ESPHome Port
+    description: >-
+      Port for the ESPHome native API (used by Home Assistant).
+  debug:
+    name: Debug Logging
+    description: >-
+      Enable verbose debug logging.
+
+network:
+  6053/tcp: ESPHome native API (used by Home Assistant integration)
+  9522/tcp: Deskimon ESP32 audio relay
