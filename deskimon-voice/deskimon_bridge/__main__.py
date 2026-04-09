@@ -45,7 +45,7 @@ def parse_args():
     parser.add_argument("--name", default=None)
     parser.add_argument("--host", default=None)
     parser.add_argument("--port", type=int, default=6053)
-    parser.add_argument("--wake-model", default="ok_nabu")
+    parser.add_argument("--wake-model", default="okay_nabu")
     parser.add_argument("--stop-model", default="stop")
     parser.add_argument("--wake-word-dir", default=[_WAKEWORDS_DIR], action="append")
     parser.add_argument("--download-dir", default=_LVA_ROOT / "local")
@@ -244,9 +244,14 @@ async def main():
 
     if not wake_models:
         wake_word_id = args.wake_model
-        wake_word = available_wake_words[wake_word_id]
-        wake_models[wake_word_id] = wake_word.load()
-        active_wake_words.add(wake_word_id)
+        wake_word = available_wake_words.get(wake_word_id)
+        if wake_word is None and available_wake_words:
+            wake_word_id = next(iter(available_wake_words))
+            wake_word = available_wake_words[wake_word_id]
+            _LOGGER.warning("Wake model '%s' not found, using '%s'", args.wake_model, wake_word_id)
+        if wake_word is not None:
+            wake_models[wake_word_id] = wake_word.load()
+            active_wake_words.add(wake_word_id)
 
     stop_model: Optional[MicroWakeWord] = None
     for wake_word_dir in wake_word_dirs:
